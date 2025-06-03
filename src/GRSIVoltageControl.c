@@ -13,13 +13,22 @@ HV System[MAX_HVPS];
 
 int main(int argc, char *argv[])
 {
-   char userName[20] = "";
-   char passwd[20] = "";
+
+   if(argc < 4){
+      printf("ERROR: not enough arguments.  Need:\n");
+      printf("./GRSIHVControl <arguments> <host> <user> <passwd>\n");
+      return 0;
+   }
+
+   char userName[20];
+   char passwd[20];
    char hvSysName[80];
    int ret;
 
-   // copies crate name to string so its modifiable (modifying argv = bad)
-   strcpy(hvSysName, argv[argc - 1]);
+   // copies credentials to strings so they're modifiable (modifying argv = bad)
+   strncpy(hvSysName, argv[argc - 3],80);
+   strncpy(userName, argv[argc - 2],20);
+   strncpy(passwd, argv[argc - 1],20);
 
    for( ret = 0; ret < MAX_HVPS; ret++ ){
       System[ret].ID = -1;

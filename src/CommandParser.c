@@ -12,6 +12,7 @@ void ParseInputs(int argc, char *argv[])
    char option;
    char filename[80]; 
    char hvSysName[80];
+   int hvSysHandle;
 
    unsigned short NrOfSlots = 0; // number of slots in crate
    unsigned short *NrOfChList = NULL; // number of channels in each slots
@@ -28,7 +29,7 @@ void ParseInputs(int argc, char *argv[])
    const char * inFile = NULL;
 
    // copies crate name to string so its modifiable (modifying argv = bad)
-   strcpy(hvSysName, argv[argc - 1]);
+   strcpy(hvSysName, argv[argc - 3]);
 
    // check if any system has been logged into
    for( sys_iter = 0; sys_iter < MAX_HVPS; sys_iter++){
@@ -62,20 +63,20 @@ void ParseInputs(int argc, char *argv[])
                      case 'v':
                         // Searches all channels for a specific name and
                         // changes the voltage Value
-                        if(argc != 5 && argc != 4){
-                           printf("ERROR: 5 arguments needed for setting individual channel, 4 needed for setting with file, %i given\n\n", argc);
-                           printf("./GRSIHVControl <name> <voltage change> -v <host>\n");
-                           printf("./GRSIHVControl <voltage file> -v <host>\n\n");
+                        if(argc != 7 && argc != 6){
+                           printf("ERROR: 7 arguments needed for setting individual channel, 6 needed for setting with file, %i given\n\n", argc);
+                           printf("./GRSIHVControl <name> <voltage change> -v <host> <user> <passwd>\n");
+                           printf("./GRSIHVControl <voltage file> -v <host> <user> <passwd>\n\n");
                            return;
                         }
-                        if (argc == 5){
+                        if (argc == 7){
                            chanName = argv[1];
-                           chanV = atof(argv[2]);
+                           float chanV = atof(argv[2]);
                            printf("\n::: Attempting to set the voltage of channel %s.\n", chanName);
                            SetChannelVoltage(hvSysHandle, hvSysName, chanName, (float)chanV, NrOfSlots, NrOfChList);
                            printf("::: Done\n");
                         }
-                        if (argc == 4){
+                        if (argc == 6){
                            inFile = argv[1];
                            SetCrateVoltage(hvSysHandle, hvSysName, inFile, NrOfSlots, NrOfChList);
                         }
@@ -86,21 +87,21 @@ void ParseInputs(int argc, char *argv[])
                      case 'a':
                         // Searches all channels for a specific name and adjusts the channel voltage.
                         // or uses file to change entire crate at once
-                        if(argc != 5 && argc != 4){
-                           printf("ERROR: 5 arguments needed for individual channel adjustment, 4 needed for adjusting with file, %i given\n\n", argc);
-                           printf("./GRSIHVControl <name> <voltage change> -a <host>\n");
-                           printf("./GRSIHVControl <voltage file> -a <host>\n\n");
+                        if(argc != 7 && argc != 6){
+                           printf("ERROR: 7 arguments needed for individual channel adjustment, 6 needed for adjusting with file, %i given\n\n", argc);
+                           printf("./GRSIHVControl <name> <voltage change> -a <host> <user> <passwd>\n");
+                           printf("./GRSIHVControl <voltage file> -a <host> <user> <passwd>\n\n");
                            return;
                         }
-                        if(argc == 5){
+                        if(argc == 7){
                            chanName = argv[1];
-                           chanV = atof(argv[2]);
+                           float chanV = atof(argv[2]);
                            //printf("\n::: Attempting to adjust the voltage of channel %s.\n", chanName);
                            AdjustChannelVoltage(hvSysHandle, hvSysName, chanName, (float)chanV, NrOfSlots, NrOfChList);
                         }
-                        if(argc == 4){
+                        if(argc == 6){
                            inFile = argv[1];
-                           AdjustCrateVoltage(hvSysHandle, inFile, NrOfSlots, NrOfChList);
+                           AdjustCrateVoltage(hvSysHandle, hvSysName, inFile, NrOfSlots, NrOfChList);
                         }
                         break;
 
@@ -108,13 +109,13 @@ void ParseInputs(int argc, char *argv[])
                      // Toggles power of single channel
                      ///////////////////////////////////////////////////////////////////////////////////////
                      case 'p':
-                        if(argc != 5){
+                        if(argc != 7){
                            printf("::: ToggleChPower \n");
                            printf("ERROR: 5 arguments needed, %i given\n\n", argc);
-                           printf("./GRSIHVControl <channel> <1/0> -p <host>\n\n");
+                           printf("./GRSIHVControl <channel> <1/0> -p <host> <user> <passwd>\n\n");
                            return;
                         }
-                        if(argc == 5){
+                        if(argc == 7){
                            chanName = argv[1];
                            state = atof(argv[2]);
                            printf("\n::: Attempting to toggle power of channel %s.\n", chanName);
@@ -126,13 +127,13 @@ void ParseInputs(int argc, char *argv[])
                      // Toggles power of A/B channels in GRIFFIN
                      ///////////////////////////////////////////////////////////////////////////////////////
                      case 't':
-                        if(argc != 5){
+                        if(argc != 7){
                            printf("::: ToggleGriffinChannels\n");
                            printf("ERROR: 5 arguments needed, %i given\n\n", argc);
-                           printf("./GRSIHVControl <A/B> <1/0> -t <host>\n\n");
+                           printf("./GRSIHVControl <A/B> <1/0> -t <host> <user> <passwd>\n\n");
                            return;
                         }
-                        if(argc == 5){
+                        if(argc == 7){
                            chanType = argv[1];
                            state = atof(argv[2]);
                            printf("\n::: Attempting to toggle power of %s channels.\n", chanType);
@@ -144,18 +145,19 @@ void ParseInputs(int argc, char *argv[])
                      // Toggles A/B channels for TIGRESS Suppressors
                      ///////////////////////////////////////////////////////////////////////////////////////
                      case 'g':
-                        if(argc != 4){
+                        if(argc != 6){
                            //printf("::: ToggleTigChannels\n");
-                           printf("ERROR: 4 arguments needed, %i given\n\n", argc);
-                           printf("./GRSIHVControl <A/B> -g <host>\n\n");
+                           printf("ERROR: 6 arguments needed, %i given\n\n", argc);
+                           printf("./GRSIHVControl <A/B/AB> -g <host> <user> <passwd>\n\n");
                            return;
                         }
-                        if (argc == 4){ 
+                        if (argc == 6){ 
                            char * bgo_file = NULL;
                            char buf[100];
                            chanType = argv[1];
                            if (strcmp(chanType, "A") == 0) bgo_file = "BGO_B_";
                            if (strcmp(chanType, "B") == 0) bgo_file = "BGO_A_";
+                           if (strcmp(chanType, "AB") == 0) bgo_file = "BGO_AB_";
                            //printf("\n::: Attempting to toggle power of %s channels.\n", chanType);
                            strcpy(buf, bgo_file);
                            strcat(buf, hvSysName);
@@ -168,11 +170,11 @@ void ParseInputs(int argc, char *argv[])
                      // Changes names of channels in a crate
                      ///////////////////////////////////////////////////////////////////////////////////////
                      case 'n':
-                        if(argc != 6 && argc != 4){
+                        if(argc != 8 && argc != 6){
                            //printf("::: ChangeName\n");
-                           printf("ERROR: 6 arguments needed for individual channel change, 4 needed for changing with file, %i given\n\n", argc);
-                           printf("./GRSIHVControl <slot> <channel> <name> -n <host>\n");
-                           printf("./GRSIHVControl <nameFile> -n <host>\n\n");
+                           printf("ERROR: 8 arguments needed for individual channel change, 6 needed for changing with file, %i given\n\n", argc);
+                           printf("./GRSIHVControl <slot> <channel> <name> -n <host> <user> <passwd>\n");
+                           printf("./GRSIHVControl <nameFile> -n <host> <user> <passwd>\n\n");
                            return;
                         }
                         if(argc == 6){
@@ -188,7 +190,7 @@ void ParseInputs(int argc, char *argv[])
                               //printf("::: Done\n");
                            }
                         }
-                        if(argc == 4){
+                        if(argc == 6){
                            inFile =argv[1];
                            printf("\n::: Attempting to name channels using %s\n", inFile);
                            ChangeCrateName(hvSysHandle, inFile);

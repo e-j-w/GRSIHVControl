@@ -81,17 +81,29 @@ void HVSystemLogin(const char * hostname, const char * userName, const char * pa
       strcpy(hostIP, "");
       sysType = 2;
    }
-   else if(strcmp(hostname, "") == 0){
+   else if(strcmp(hostname, "tighv00") == 0){
       strcpy(hostIP, "");
       sysType = 0;
    }
-   else if(strcmp(hostname, "") == 0){
+   else if(strcmp(hostname, "tighv01") == 0){
       strcpy(hostIP, "");
       sysType = 0;
    }
-   else if(strcmp(hostname, "") == 0){
+   else if(strcmp(hostname, "tighv02") == 0){
       strcpy(hostIP, "");
       sysType = 0;
+   }
+   else if(strcmp(hostname, "tighv04") == 0){
+      strcpy(hostIP, "");
+      sysType = 2;
+   }
+   else if(strcmp(hostname, "tighv05") == 0){
+      strcpy(hostIP, "");
+      sysType = 2;
+   }
+   else if(strcmp(hostname, "grifhv03") == 0){
+      strcpy(hostIP, "");
+      sysType = 2;
    }
    else {
       printf("No hostname found. Cannot complete login procedure.");
@@ -318,6 +330,7 @@ void ChangeParameter(const int hvSysHandle, unsigned short slotNum, unsigned sho
 //==============================================================================
 int SetCrateVoltage(const int hvSysHandle, const char * hvSysName, const char * fileName, unsigned short NrOfSlots, unsigned short ChList[])
 {
+
    VoltageNode *first;     // Initial voltlist (contains junk)
    VoltageNode *voltList;  // VoltageNode being filled 
    VoltageNode *last;      // Previously filled VoltageNode
@@ -457,12 +470,12 @@ void SetChannelVoltage(const int hvSysHandle, const char * hvSysName, const char
 // @param hvSysHandle   The system handle
 // @param fileName      Path of file containing voltage information
 //==============================================================================
-int AdjustCrateVoltage(const int hvSysHandle, const char * fileName, unsigned short NrOfSlots, unsigned short ChList[])
+int AdjustCrateVoltage(const int hvSysHandle, const char * hvSysName, const char * fileName, unsigned short NrOfSlots, unsigned short ChList[])
 {
    VoltageNode *first;     // Initial voltlist (contains junk)
    VoltageNode *voltList;  // VoltageNode being filled 
    VoltageNode *last;      // Previously filled VoltageNode
-   char line[MAX_SIZE],chName[MAX_SIZE], hostName[MAX_SIZE];
+   char line[MAX_SIZE],chName[MAX_SIZE];
    int deltaV;
 
    FILE * inFile = fopen(fileName, "r");
@@ -473,10 +486,6 @@ int AdjustCrateVoltage(const int hvSysHandle, const char * fileName, unsigned sh
 
    //int total_rows = CountFileLines(inFile);
    //printf("Found %i lines.\n", total_rows);
-
-   // extracting hostName from fileName
-   strcpy(hostName, fileName);
-   hostName[strlen(hostName) - 4] = 0;
 
    // allocate new node to hold data
    first = malloc(sizeof(VoltageNode));
@@ -501,10 +510,12 @@ int AdjustCrateVoltage(const int hvSysHandle, const char * fileName, unsigned sh
       line[strlen(line)-1] = '\0';
 
       // scan fields
-      if (sscanf(line, "%[^,],%i", chName, &deltaV) != 2){
+      if (sscanf(line, "%s %i", chName, &deltaV) != 2){
          printf("Line '%s' did not scan properly\n", line);
+         //printf("%s %i\n",chName,deltaV);
          return 1;
       }
+      //printf("%s %i\n",chName,deltaV); getc(stdin);
 
       voltList = malloc(sizeof(VoltageNode));
       if (voltList == NULL) {
@@ -513,7 +524,7 @@ int AdjustCrateVoltage(const int hvSysHandle, const char * fileName, unsigned sh
       }
       voltList->chName = strdup(chName);
       voltList->deltaV = deltaV;
-      voltList->hostName = strdup(hostName);
+      voltList->hostName = strdup(hvSysName);
       voltList->next = NULL;
       if (first != NULL){
          last->next = voltList;
@@ -667,7 +678,7 @@ int ToggleTigChannels(const int hvSysHandle, const char* hvSysName, const char *
    unsigned short j =0;
    float chValue;
    float chNew = 0;
-   float chDefault = 900;
+   float chDefault = 800;
    const char * chType;
    int len;
    int changeCount = 0;
@@ -692,7 +703,7 @@ int ToggleTigChannels(const int hvSysHandle, const char* hvSysName, const char *
          chType = &chName[len - 1];
 
          // change voltage 
-         if(strcmp(chanType, chType) == 0){
+         if( (strcmp(chanType, chType) == 0) || ((strcmp(chanType, "AB") == 0) && ((strcmp("A", chType) == 0) || (strcmp("B", chType) == 0))) ){
             printf("Found %s in %s Slot %i Channel %i \n", chName, (char *) hvSysName, i, j);
             returnCode = CAENHV_SetChParam(hvSysHandle, i, parName, 1, &j, &chDefault);
             if(returnCode){
@@ -735,7 +746,11 @@ int ToggleTigChannels(const int hvSysHandle, const char* hvSysName, const char *
    }
    else if(strcmp(chanType, "B") == 0){
       printf("\nSuppressor A Channel data written to: %s\n", fileName);
-   } else {
+   }
+   else if(strcmp(chanType, "AB") == 0){
+      printf("\nChannel data written to: %s\n", fileName);
+   } 
+   else {
       printf("\nWARNING: channel type not found. Channel data written to: %s\n", fileName);
    }
 

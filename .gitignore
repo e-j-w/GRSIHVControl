@@ -1,4 +1,6 @@
 *.xml
 *.o
+*.dat
+*.txt
 GRSIHVControl
 Backup

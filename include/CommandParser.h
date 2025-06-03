@@ -20,8 +20,8 @@
 void ParseInputs(int argc, char *argv[]);
 
 // variables
-int hvSysHandle;
-float chanV;
+//int hvSysHandle;
+//float chanV;
 
 // crate map variables
 #endif
