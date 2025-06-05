@@ -12,7 +12,7 @@ void ParseInputs(int argc, char *argv[])
    char option;
    char filename[80]; 
    char hvSysName[80];
-   int hvSysHandle;
+   //int hvSysHandle;
 
    unsigned short NrOfSlots = 0; // number of slots in crate
    unsigned short *NrOfChList = NULL; // number of channels in each slots

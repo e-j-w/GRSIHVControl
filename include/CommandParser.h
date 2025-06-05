@@ -15,13 +15,12 @@
 
 #define MAX_HVPS (5) // maximum of 5 HV crates at one time
 
-
 // prototypes
 void ParseInputs(int argc, char *argv[]);
 
 // variables
-//int hvSysHandle;
-//float chanV;
+static int hvSysHandle = 0;
+static float chanV = 0.0f;
 
 // crate map variables
 #endif
